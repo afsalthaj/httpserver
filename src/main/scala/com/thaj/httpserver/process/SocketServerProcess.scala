@@ -6,6 +6,8 @@ import java.net.{ ServerSocket, Socket }
 import com.thaj.httpserver.protocol.HttpProtocol
 import scala.util.Try
 
+// To start with, to represent effects, we use Try.
+// This could be an IO... may be
 trait SocketServerProcess {
   val protocol: HttpProtocol
 
@@ -28,9 +30,7 @@ trait SocketServerProcess {
 
   private def processInputFromSocket(reader: SocketReader): Try[HttpProtocol.Response] =
     Try {
-      val x = reader.readLine
-      println("The request is " + x)
-      x
+      reader.readLine
     }.map(protocol.asInput andThen protocol.processInput)
 
   def readFromSocketAndProcess(clientSocket: Socket): Try[HttpProtocol.Response] =
