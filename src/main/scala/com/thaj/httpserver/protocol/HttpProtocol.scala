@@ -1,5 +1,6 @@
 package com.thaj.httpserver.protocol
 
+// Ideally we expect HttpProtocol[A], parameterised by a parser
 trait HttpProtocol {
   def asInput: String => HttpProtocol.Request
   // some bits and pieces of http protocol

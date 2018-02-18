@@ -10,6 +10,7 @@ import scala.util.Try
 // This could be an IO... may be
 // This is more or less divided to get an overview of the functionalities we expect from Socket/ServerSocket
 // TODO; investiagate scala socket programming, as we find functions accepting `Object` and being indeterministic.
+// Ideally I expect this to be SocketServerProcess[A <: HttpProtocol], parameterised by HttpProtocol
 trait SocketServerProcess {
   val protocol: HttpProtocol
 
