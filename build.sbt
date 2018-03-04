@@ -1,7 +1,7 @@
 import sbt._
 import sbt.Keys._
 
-name := "StringCompression"
+name := "server"
 
 version := "0.1"
 

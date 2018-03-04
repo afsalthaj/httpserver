@@ -5,11 +5,11 @@ import java.net.ServerSocket
 import scala.util.{ Failure, Success, Try }
 
 import com.thaj.httpserver.process.SocketServerProcess
-import com.thaj.httpserver.protocol.HttpProtocol
+import com.thaj.httpserver.protocol.Protocol
 
 object HttpServer {
-  object HttpServerSocketServerProcessProcess extends SocketServerProcess {
-    val protocol = HttpProtocol.StandardProtocol
+  object HttpServerSocketServerProcessProcess extends SocketServerProcess[Protocol.HttpRequest, Protocol.HttpResponse] {
+    val protocol = Protocol.HttpProtocol
   }
   import HttpServerSocketServerProcessProcess._
 
@@ -37,7 +37,12 @@ object HttpServer {
     }
   }
   def main(args: Array[String]): Unit = {
-    val PORT = 8888
-    init(PORT)
+    val args0 = args(0)
+    require(args0 == "-p")
+
+    val port = args(1).toInt
+
+    init(port)
+
   }
 }
