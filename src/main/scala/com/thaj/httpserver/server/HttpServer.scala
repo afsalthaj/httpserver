@@ -1,38 +1,44 @@
 package com.thaj.httpserver.server
 
-import java.net.ServerSocket
-
 import scala.util.{ Failure, Success, Try }
 
-import com.thaj.httpserver.process.SocketServerProcess
+import java.net.ServerSocket
+import com.thaj.httpserver.socketserverprocess.SocketServerProcess
 import com.thaj.httpserver.protocol.Protocol
+import com.thaj.httpserver.repository.{ InMemoryRepository, Repository }
+import com.thaj.httpserver.requesttoresponse.RequestHandler
+import com.thaj.httpserver.requesttoresponse.RequestHandler.{ HttpRequest, HttpResponse }
 
 object HttpServer {
-  object HttpServerSocketServerProcessProcess extends SocketServerProcess[Protocol.HttpRequest, Protocol.HttpResponse] {
+  object HttpServerSocketProcess extends SocketServerProcess[HttpRequest, HttpResponse] {
     val protocol = Protocol.HttpProtocol
+    val requestHandler = RequestHandler.HttpRequestHandler.processRequest
   }
-  import HttpServerSocketServerProcessProcess._
 
-  def communicate(serverSocket: ServerSocket): Try[ServerSocket] = {
+  import HttpServerSocketProcess._
+
+  // TODO; Avoid running Kleisli in the composition and make the description purely lazy.
+  def communicate(serverSocket: ServerSocket, repository: Repository[Try, String, String]): Try[ServerSocket] = {
     for {
-      clientSocket <- getNewClientSocket(serverSocket)
-      response <- readFromSocketAndProcess(clientSocket)
-      _ <- writeToSocket(clientSocket, response)
+      clientSocket <- newClientSocket.run(serverSocket)
+      response <- readFromSocketAndProcess(repository).run(clientSocket)
+      _ <- writeToSocket(clientSocket).run(response)
       _ <- Try { clientSocket.close() }
     } yield serverSocket
   }
 
+  val repository = new InMemoryRepository
   // Runs an instance and closes off all the resources
   def run(port: Int): Try[ServerSocket] = {
-    getNewServerSocket(port) match {
-      case Success(ser) => communicate(ser)
+    newServerSocket.run(port) match {
+      case Success(ser) => communicate(ser, repository)
       case Failure(y) => throw new Exception("Failed to start the server" + y)
     }
   }
 
   def init(port: Int): Unit = {
-    getNewServerSocket(port) match {
-      case Success(ser) => while (true) communicate(ser)
+    newServerSocket.run(port) match {
+      case Success(ser) => while (true) communicate(ser, repository)
       case Failure(y) => throw new Exception("Failed to start the server" + y)
     }
   }
@@ -43,6 +49,5 @@ object HttpServer {
     val port = args(1).toInt
 
     init(port)
-
   }
 }
